@@ -41,17 +41,33 @@ Expected output:
 { "enabled": true }
 ```
 
-## 🛡 Security Notes
+## 🩺 Health Check Endpoint
 
-- Don't expose this app to the public internet.
-- No Pi-hole credentials are stored or cached.
-- The app authenticates, fetches status, and logs out on every request.
+A simple health check endpoint is included:
+
+```bash
+curl http://localhost:5000/health
+```
+
+This returns:
+
+```
+OK
+```
+
+Useful for service discovery or container health probes.
 
 ## ✅ Uptime Kuma Setup
 
 - Monitor Type: `HTTP(s) - Keyword`
 - URL: `http://<docker-host>:5000/`
 - Keyword: `enabled`
+
+## 🛡 Security Notes
+
+- Don't expose this app to the public internet.
+- No Pi-hole credentials are stored or cached.
+- The app authenticates, fetches status, and logs out on every request.
 
 ---
 
