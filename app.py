@@ -11,6 +11,10 @@ app = Flask(__name__)
 PIHOLE_URL = os.environ.get("PIHOLE_URL")
 PIHOLE_PASSWORD = os.environ.get("PIHOLE_PASSWORD")
 
+@app.route("/health")
+def health_check():
+    return "OK", 200
+
 @app.route("/")
 def check_blocking():
     if not PIHOLE_URL or not PIHOLE_PASSWORD:
