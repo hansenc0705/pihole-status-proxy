@@ -36,7 +36,7 @@ def check_blocking():
             print("SID not found in response", flush=True)
             return jsonify({"error": "No SID returned from Pi-hole"}), 500
 
-        # Step 2: Check blocking status
+        # Step 2: Check blocking status (cookies already managed by session)
         status_response = session.get(status_url, verify=False)
         status_response.raise_for_status()
         data = status_response.json()
@@ -49,7 +49,7 @@ def check_blocking():
         return jsonify({"error": str(e)}), 500
 
     finally:
-        # Step 3: Logout
+        # Step 3: Logout using the SID
         if 'sid' in locals() and sid:
             logout_url = f"{PIHOLE_URL}/api/auth?sid={sid}"
             try:
