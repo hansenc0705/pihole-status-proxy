@@ -15,8 +15,6 @@ A lightweight Flask app that securely checks whether Pi-hole's DNS blocking is e
 ## 📦 Usage (Docker Compose)
 
 ```yaml
-version: '3.8'
-
 services:
   pihole-status-proxy:
     build: .
