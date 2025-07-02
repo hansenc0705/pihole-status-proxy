@@ -1,6 +1,10 @@
 import os
 import requests
+import urllib3
 from flask import Flask, jsonify
+
+# Suppress HTTPS warnings (for self-signed certs)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 
@@ -10,6 +14,7 @@ PIHOLE_PASSWORD = os.environ.get("PIHOLE_PASSWORD")
 @app.route("/")
 def check_blocking():
     if not PIHOLE_URL or not PIHOLE_PASSWORD:
+        print("Missing PIHOLE_URL or PIHOLE_PASSWORD", flush=True)
         return jsonify({"error": "PIHOLE_URL or PIHOLE_PASSWORD not set"}), 500
 
     auth_url = f"{PIHOLE_URL}/api/auth"
@@ -18,29 +23,40 @@ def check_blocking():
     session = requests.Session()
 
     try:
-        # Step 1: Authenticate and get SID
+        # Step 1: Authenticate
         auth_response = session.post(auth_url, json={"password": PIHOLE_PASSWORD}, verify=False)
+        print("Auth response status:", auth_response.status_code, flush=True)
+        print("Auth response body:", auth_response.text, flush=True)
+
         auth_response.raise_for_status()
-        sid = auth_response.json().get("sid")
+        json_data = auth_response.json()
+        sid = json_data.get("session", {}).get("sid")
 
         if not sid:
+            print("SID not found in response", flush=True)
             return jsonify({"error": "No SID returned from Pi-hole"}), 500
 
-        # Step 2: Use the session to check blocking status
+        # Step 2: Check blocking status
         status_response = session.get(status_url, verify=False)
         status_response.raise_for_status()
         data = status_response.json()
+        print("Blocking status data:", data, flush=True)
 
         return data
 
     except Exception as e:
+        print("Exception occurred:", str(e), flush=True)
         return jsonify({"error": str(e)}), 500
 
     finally:
-        # Step 3: Log out with DELETE request
+        # Step 3: Logout
         if 'sid' in locals() and sid:
             logout_url = f"{PIHOLE_URL}/api/auth?sid={sid}"
             try:
-                session.delete(logout_url, verify=False)
-            except:
-                pass  # Swallow logout errors silently
+                logout_response = session.delete(logout_url, verify=False)
+                print("Logged out:", logout_response.status_code, flush=True)
+            except Exception as logout_err:
+                print("Logout error:", str(logout_err), flush=True)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
