@@ -31,13 +31,17 @@ def check_blocking():
         auth_response.raise_for_status()
         json_data = auth_response.json()
         sid = json_data.get("session", {}).get("sid")
+        csrf = json_data.get("session", {}).get("csrf")
 
-        if not sid:
-            print("SID not found in response", flush=True)
-            return jsonify({"error": "No SID returned from Pi-hole"}), 500
+        if not sid or not csrf:
+            print("SID or CSRF token missing", flush=True)
+            return jsonify({"error": "Missing SID or CSRF token"}), 500
 
-        # Step 2: Check blocking status (cookies already managed by session)
-        status_response = session.get(status_url, verify=False)
+        # Step 2: Check blocking status (with CSRF token header)
+        headers = {
+            "X-CSRF-Token": csrf
+        }
+        status_response = session.get(status_url, headers=headers, verify=False)
         status_response.raise_for_status()
         data = status_response.json()
         print("Blocking status data:", data, flush=True)
