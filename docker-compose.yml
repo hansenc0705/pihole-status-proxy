@@ -1,0 +1,9 @@
+services:
+  pihole-status-proxy:
+    build: .
+    container_name: pihole-status-proxy
+    env_file:
+      - .env
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
